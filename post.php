@@ -1,79 +1,68 @@
 <?php
- /*
-// connect to mongodb
-   $m = new MongoClient();
-   echo "Connection to database successfully";
-   // select a database
-   $db = $m->mydb;
-   echo "Database mydb selected";
-   $collection = $db->createCollection("mycol");
-   echo "Collection created succsessfully";
-   
    // connect to mongodb
    $m = new MongoClient();
    echo "Connection to database successfully";
    // select a database
    $db = $m->mydb;
    echo "Database mydb selected";
-   $collection = $db->mycol;
-   echo "Collection selected succsessfully";
-   $document = array( 
-      "title" => "MongoDB", 
-      "description" => "database", 
-      "likes" => 100,
-      "url" => "http://www.tutorialspoint.com/mongodb/",
-      "by", "tutorials point"
-   );
-   $collection->insert($document);
-   echo "Document inserted successfully";
-   */
+   $collection = $db->createCollection("app_details");
 
-   $data = json_decode(file_get_contents('php://input'), true);
-	
-   /*$data  = array("dev_id"=>200, "app_id"=>1, "activities"=>[
-            "activity_name"=>"MainActivity",
-            "item_name"=>"button1",
-            "a"=>12,
-            "total_a"=>15,
-            "b"=>12,
-            "total_b"=>15]);
-   */
-   //var_dump($data);
-	
-   $m = new MongoClient();
-   $db = $m->mydb;
-   $collection = $db->app_details;
-   
 
-   //$cursor = $collection->find(array("dev_id"=>$data["dev_id"], "app_id"=>$data["app_id"])); 
-   //var_dump($data["activities"]["activity_name"]);
-   /*foreach($cursor as $document)
-      $old = $document["activities"];
-   */
-   //var_dump($old["activity_name"]);
-   
-   /*
-   foreach($data["activities"] as $new)
+   echo "Collection created succsessfully";
+   $document = json_decode(file_get_contents('php://input'), true);
+   $flag=0;
+   $i=0;
+   $cursor = $collection->find();
+   foreach ($cursor as $temp) 
    {
-      var_dump($new);
-      foreach($old as $a)
+      #code...
+      if((strcmp($temp['activities'][0]['activity_name'],$document['activities'][0]['activity_name'])!=0))
       {
-         var_dump($a["activity_name"]);
-         
-         if($a[trim("activity_name")] == $b[trim("activity_name")] && $a['item_name'] == $b['item_name'])
-         {
-            $b["a"] = $b["a"] + $a["a"];
-            $b["total_a"] = $b["total_a"] + $a["total_a"];
-            $b["b"] = $b["b"] + $a["b"];
-            $b["total_b"] = $b["total_b"] + $a["total_b"];
-         }
-         
+         $appid=$temp['app_id'];
+         $collection->remove(array("app_id"=>$appid));
+         break;
       }
-      
+      if($temp['app_id']==$document['app_id'])
+      {
+
+         for($i=0;$i<4;$i++)
+         {
+
+            if((strcmp($temp['activities'][$i]['activity_name'],$document['activities'][$i]['activity_name'])==0)&&(strcmp($temp['activities'][$i]['item_name'],$document['activities'][$i]['item_name'])==0))
+            {
+               $flag=1;
+               $total_a2=$document['activities'][$i]['total_a'];
+               $total_b2=$document['activities'][$i]['total_b'];
+               $a2=$document['activities'][$i]['a'];
+               $b2=$document['activities'][$i]['b'];
+
+               $total_a1=$temp['activities'][$i]['total_a'];
+               $total_b1=$temp['activities'][$i]['total_b'];
+               $a1=$temp['activities'][$i]['a'];
+               $b1=$temp['activities'][$i]['b'];
+
+               $document['activities'][$i]['total_a']=$total_a2+$total_a1;
+               $document['activities'][$i]['total_b']=$total_b2+$total_b1;
+
+               $document['activities'][$i]['a']=$a1+$a2;
+               $document['activities'][$i]['b']=$b1+$b2;
+            }
+         }
+         $appid=$temp['app_id'];
+         $collection->remove(array("app_id"=>$appid));
+         $collection->insert($document);
+      }
+
    }
-   */
-   //$collection->remove(array("dev_id"=>$data["dev_id"], "app_id"=>$data["app_id"]));
-   $collection->insert($data);
-   //echo "Document inserted successfully";
+   if($flag!=1)
+   {
+      $collection->insert($document);
+   }
    
-?>	
+   echo "Document inserted successfully";
+
+?>
+
+
+
+
